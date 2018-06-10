@@ -1,44 +1,17 @@
 import luigi
 import pandas as pd
 
-
-class DataPreProcessingTextoQuebrado(luigi.Task):
+class DataPreProcessingX(luigi.Task):
 
     def run(self):
         classificacoes = pd.read_csv('emails.csv')
         textosPuros = classificacoes['email']
-        textosPuros.str.lower().str.split(' ')
-
-    def output(self):
-        return luigi.LocalTarget("/tmp/textoQuebrado.csv")
-
-
-class StoreDataIngestionDicionario(luigi.Task):
-
-    def requires(self):
-        yield DataPreProcessingTextoQuebrado()
-
-    def run(self):
-        print("Dicionario2")
-        textosQuebrados = pd.read_csv(DataPreProcessingTextoQuebrado().output().path)
-        print(textosQuebrados)
+        textosQuebrados = textosPuros.str.lower().str.split(' ')
         dicionario = set()
+
         for lista in textosQuebrados:
             dicionario.update(lista)
 
-    def output(self):
-        return luigi.LocalTarget("/tmp/dicionario.csv")
-
-
-
-class DataPreProcessingX(luigi.Task):
-
-    def requires(self):
-        yield StoreDataIngestionDicionario()
-        yield DataPreProcessingTextoQuebrado()
-
-    def run(self):
-        dicionario = pd.read_csv(StoreDataIngestionDicionario().output().path)
         totalDePalavras = len(dicionario)
         tuplas = zip(dicionario, range(totalDePalavras))
         tradutor = {palavra: indice for palavra, indice in tuplas}
@@ -52,17 +25,41 @@ class DataPreProcessingX(luigi.Task):
                     vetor[posicao] += 1
 
             return vetor
-        textosQuebrados = pd.read_csv(DataPreProcessingTextoQuebrado().output().path)
+
         vetoresDeTexto = [vetorizar_texto(texto, tradutor) for texto in textosQuebrados]
 
-    def output(self):
-        return luigi.LocalTarget("/tmp/vetoresDeTexto.csv")
-
-class DataPreProcessingY(luigi.Task):
-
-    def run(self):
-        classificacoes = pd.read_csv('emails.csv')
         marcas = classificacoes['classificacao']
 
+        X = vetoresDeTexto
+        Y = marcas
+
+        porcentagem_de_treino = 0.8
+
+        tamanho_de_treino = int(porcentagem_de_treino * len(Y))
+        treino_dados = X[0:tamanho_de_treino]
+
+        with open(self.output().path, 'a') as the_file:
+            for dados in treino_dados:
+                the_file.write(str(dados))
+            the_file.close()
+
+
     def output(self):
-        return luigi.LocalTarget("/tmp/marcas.csv")
+        return luigi.LocalTarget("/tmp/pipelineX.csv")
+
+class DataPreProcessingTarget(luigi.Task):
+
+    def run(self):
+        email_classification = pd.read_csv('emails.csv')
+        marcas = email_classification['classificacao']
+        Y = marcas
+        porcentagem_de_treino = 0.8
+        tamanho_de_treino = int(porcentagem_de_treino * len(Y))
+        treino_marcacoes = Y[0:tamanho_de_treino]
+        with open(self.output().path, 'a') as the_file:
+            for marca in treino_marcacoes:
+                the_file.write(str(marca) + '\n')
+            the_file.close()
+
+    def output(self):
+        return luigi.LocalTarget("/tmp/pipelinemarcas.csv")
