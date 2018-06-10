@@ -16,17 +16,6 @@ def fit_and_predict(nome, modelo, treino_dados, treino_marcacoes):
     print(msg)
     return taxa_de_acerto
 
-
-def getTreinoMarcacoes():
-    classificacoes = pd.read_csv('emails.csv')
-    marcas = classificacoes['classificacao']
-    Y = marcas
-    porcentagem_de_treino = 0.8
-    tamanho_de_treino = int(porcentagem_de_treino * len(Y))
-    treino_marcacoes = Y[0:tamanho_de_treino]
-    return treino_marcacoes
-
-
 def getTreinoDados():
     classificacoes = pd.read_csv('emails.csv')
     textosPuros = classificacoes['email']
@@ -66,12 +55,27 @@ class Train(luigi.Task):
         yield DataPreProcessingTarget()
 
     def run(self):
+        treino_dados = []
+        dadosNormalizados = pd.read_table(DataPreProcessingX().output().path)
+        dado_normalizado = dadosNormalizados['emailNormalizado']
+
+        # for dado in dado_normalizado:
+        #     print('Dado:')
+        #     print(np.array(dado))
+        #     treino_dados.append(np.array(dado))
+        #     print('\n')
+
+
+        treino_dados = getTreinoDados()
+        print(treino_dados)
+
+        classificacoes = pd.read_csv(DataPreProcessingTarget().output().path)
+        treino_marcacoes = classificacoes['classificacao']
 
         from sklearn.ensemble import AdaBoostClassifier
         modeloAdaBoost = AdaBoostClassifier(random_state=0)
-        treino_dados = getTreinoDados()
-        treino_marcacoes = getTreinoMarcacoes()
         resultadoAdaBoost = fit_and_predict("AdaBoostClassifier", modeloAdaBoost, treino_dados, treino_marcacoes)
+
         print(resultadoAdaBoost)
 
     def output(self):

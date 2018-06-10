@@ -39,24 +39,30 @@ class DataPreProcessingX(luigi.Task):
         treino_dados = X[0:tamanho_de_treino]
 
         with open(self.output().path, 'a') as the_file:
-            for dados in treino_dados:
-                the_file.write(str(dados))
+            the_file.write('emailNormalizado' + '\n')
+            for treino_dado in treino_dados:
+                the_file.write(str(treino_dado) + '\n')
             the_file.close()
-
 
     def output(self):
         return luigi.LocalTarget("/tmp/pipelineX.csv")
 
+def getTreinoMarcacoes():
+    classificacoes = pd.read_csv('emails.csv')
+    marcas = classificacoes['classificacao']
+    Y = marcas
+    porcentagem_de_treino = 0.8
+    tamanho_de_treino = int(porcentagem_de_treino * len(Y))
+    treino_marcacoes = Y[0:tamanho_de_treino]
+    return treino_marcacoes
+
+
 class DataPreProcessingTarget(luigi.Task):
 
     def run(self):
-        email_classification = pd.read_csv('emails.csv')
-        marcas = email_classification['classificacao']
-        Y = marcas
-        porcentagem_de_treino = 0.8
-        tamanho_de_treino = int(porcentagem_de_treino * len(Y))
-        treino_marcacoes = Y[0:tamanho_de_treino]
+        treino_marcacoes = getTreinoMarcacoes()
         with open(self.output().path, 'a') as the_file:
+            the_file.write('classificacao' + '\n')
             for marca in treino_marcacoes:
                 the_file.write(str(marca) + '\n')
             the_file.close()
