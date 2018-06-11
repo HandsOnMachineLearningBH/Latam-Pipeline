@@ -16,38 +16,6 @@ def fit_and_predict(nome, modelo, treino_dados, treino_marcacoes):
     print(msg)
     return taxa_de_acerto
 
-def getTreinoDados():
-    classificacoes = pd.read_csv('emails.csv')
-    textosPuros = classificacoes['email']
-    textosQuebrados = textosPuros.str.lower().str.split(' ')
-    dicionario = set()
-
-    for lista in textosQuebrados:
-        dicionario.update(lista)
-
-    totalDePalavras = len(dicionario)
-    tuplas = zip(dicionario, range(totalDePalavras))
-    tradutor = {palavra: indice for palavra, indice in tuplas}
-
-    def vetorizar_texto(texto, tradutor):
-        vetor = [0] * len(tradutor)
-        for palavra in texto:
-            if palavra in tradutor:
-                posicao = tradutor[palavra]
-                vetor[posicao] += 1
-
-        return vetor
-
-    vetoresDeTexto = [vetorizar_texto(texto, tradutor) for texto in textosQuebrados]
-
-    X = vetoresDeTexto
-    porcentagem_de_treino = 0.8
-
-    tamanho_de_treino = int(porcentagem_de_treino * len(X))
-    treino_dados = X[0:tamanho_de_treino]
-    return treino_dados
-
-
 class Train(luigi.Task):
 
     def requires(self):
@@ -57,17 +25,9 @@ class Train(luigi.Task):
     def run(self):
         treino_dados = []
         dadosNormalizados = pd.read_table(DataPreProcessingX().output().path)
-        dado_normalizado = dadosNormalizados['emailNormalizado']
-
-        # for dado in dado_normalizado:
-        #     print('Dado:')
-        #     print(np.array(dado))
-        #     treino_dados.append(np.array(dado))
-        #     print('\n')
-
-
-        treino_dados = getTreinoDados()
-        print(treino_dados)
+        import ast
+        for dado in dadosNormalizados['emailNormalizado']:
+            treino_dados.append(ast.literal_eval(dado))
 
         classificacoes = pd.read_csv(DataPreProcessingTarget().output().path)
         treino_marcacoes = classificacoes['classificacao']
@@ -75,7 +35,7 @@ class Train(luigi.Task):
         from sklearn.ensemble import AdaBoostClassifier
         modeloAdaBoost = AdaBoostClassifier(random_state=0)
         resultadoAdaBoost = fit_and_predict("AdaBoostClassifier", modeloAdaBoost, treino_dados, treino_marcacoes)
-
+        print("Escolher modelo com melhor valor: ")
         print(resultadoAdaBoost)
 
     def output(self):
