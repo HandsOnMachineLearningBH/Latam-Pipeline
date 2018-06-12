@@ -1,10 +1,21 @@
 import luigi
 import pandas as pd
 
+from data_ingestion import DataIngestion
+
+
 class DataPreProcessingX(luigi.Task):
 
+    def requires(self):
+        yield DataIngestion();
+
     def run(self):
-        classificacoes = pd.read_csv('emails.csv')
+
+        classificacoes = pd.read_csv(DataIngestion().output().path)
+
+        print("Data Pre-ProcessingX is running...")
+        print(len(classificacoes['email']))
+
         textosPuros = classificacoes['email']
         textosQuebrados = textosPuros.str.lower().str.split(' ')
         dicionario = set()
@@ -28,14 +39,9 @@ class DataPreProcessingX(luigi.Task):
 
         vetoresDeTexto = [vetorizar_texto(texto, tradutor) for texto in textosQuebrados]
 
-        marcas = classificacoes['classificacao']
-
         X = vetoresDeTexto
-        Y = marcas
 
-        porcentagem_de_treino = 0.8
-
-        tamanho_de_treino = int(porcentagem_de_treino * len(Y))
+        tamanho_de_treino = int(len(classificacoes['email']))
         treino_dados = X[0:tamanho_de_treino]
 
         with open(self.output().path, 'a') as the_file:
@@ -47,20 +53,20 @@ class DataPreProcessingX(luigi.Task):
     def output(self):
         return luigi.LocalTarget("/tmp/pipelineX.csv")
 
-def getTreinoMarcacoes():
-    classificacoes = pd.read_csv('emails.csv')
-    marcas = classificacoes['classificacao']
-    Y = marcas
-    porcentagem_de_treino = 0.8
-    tamanho_de_treino = int(porcentagem_de_treino * len(Y))
-    treino_marcacoes = Y[0:tamanho_de_treino]
-    return treino_marcacoes
 
+class TargetDataPreProcessing(luigi.Task):
 
-class DataPreProcessingTarget(luigi.Task):
+    def requires(self):
+        yield DataIngestion();
 
     def run(self):
-        treino_marcacoes = getTreinoMarcacoes()
+        classificacoes = pd.read_csv(DataIngestion().output().path)
+
+        print("Target Data Pre-Processing is running...")
+        print(len(classificacoes))
+
+        treino_marcacoes = classificacoes['classificacao']
+
         with open(self.output().path, 'a') as the_file:
             the_file.write('classificacao' + '\n')
             for marca in treino_marcacoes:
@@ -68,4 +74,4 @@ class DataPreProcessingTarget(luigi.Task):
             the_file.close()
 
     def output(self):
-        return luigi.LocalTarget("/tmp/pipelinemarcas.csv")
+        return luigi.LocalTarget("/tmp/pipelineMarcas.csv")

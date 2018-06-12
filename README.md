@@ -32,4 +32,6 @@ $ sh build.sh
 * In case of --local-scheduler flag the error is not reproduced.
 
 
-
+Author:
+Lorena de Souza
+lcsouza@thoughtworks.com

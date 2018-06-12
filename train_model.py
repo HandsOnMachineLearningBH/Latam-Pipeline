@@ -3,8 +3,7 @@ import luigi
 import numpy as np
 from sklearn.model_selection import cross_val_score
 import pandas as pd
-from data_pre_processing import DataPreProcessingX
-from data_pre_processing import DataPreProcessingTarget
+from data_training import TargetDataTraining, InstanceDataTraining
 
 
 def fit_and_predict(nome, modelo, treino_dados, treino_marcacoes):
@@ -19,17 +18,19 @@ def fit_and_predict(nome, modelo, treino_dados, treino_marcacoes):
 class Train(luigi.Task):
 
     def requires(self):
-        yield DataPreProcessingX()
-        yield DataPreProcessingTarget()
+        yield InstanceDataTraining()
+        yield TargetDataTraining()
 
     def run(self):
         treino_dados = []
-        dadosNormalizados = pd.read_table(DataPreProcessingX().output().path)
+        dadosNormalizados = pd.read_table(InstanceDataTraining().output().path)
+        print("Train model is running")
+
         import ast
         for dado in dadosNormalizados['emailNormalizado']:
             treino_dados.append(ast.literal_eval(dado))
 
-        classificacoes = pd.read_csv(DataPreProcessingTarget().output().path)
+        classificacoes = pd.read_csv(TargetDataTraining().output().path)
         treino_marcacoes = classificacoes['classificacao']
 
         from sklearn.ensemble import AdaBoostClassifier
