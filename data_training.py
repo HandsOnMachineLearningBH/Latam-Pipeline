@@ -34,7 +34,7 @@ class TargetDataTraining(luigi.Task):
 
 def get80PorcentoDeInstanciasParaTreino(file):
     classificacoes = pd.read_table(file)
-    instancias = classificacoes['emailNormalizado']
+    instancias = classificacoes['tweetNormalizado']
     X = instancias
     porcentagem_de_treino = 0.8
     tamanho_de_treino = int(porcentagem_de_treino * len(X))
@@ -52,7 +52,7 @@ class InstanceDataTraining(luigi.Task):
         print("Instance Data Training is running...")
 
         with open(self.output().path, 'a') as the_file:
-            the_file.write('emailNormalizado' + '\n')
+            the_file.write('tweetNormalizado' + '\n')
             for treino_dado in treino_instancias:
                 the_file.write(str(treino_dado) + '\n')
             the_file.close()

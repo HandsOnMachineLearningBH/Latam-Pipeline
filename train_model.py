@@ -27,7 +27,7 @@ class Train(luigi.Task):
         print("Train model is running")
 
         import ast
-        for dado in dadosNormalizados['emailNormalizado']:
+        for dado in dadosNormalizados['tweetNormalizado']:
             treino_dados.append(ast.literal_eval(dado))
 
         classificacoes = pd.read_csv(TargetDataTraining().output().path)
