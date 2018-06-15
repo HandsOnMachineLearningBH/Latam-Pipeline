@@ -8,8 +8,13 @@ class TweetDataIngestion(luigi.Task):
         print("Tweet Data Ingestion is running...")
         print(len(tweetsClassificados))
         print('\n')
+
         #TODO
-        #transforma o arquivo raw_tweets.csv para tweets.csv
+        #Transforma o arquivo raw_tweets.csv para tweets.csv automaticamente
+        #Por exemplo, transformar as labels para números:
+        # Comercial = 1
+        # Técnico = 2
+        # Cursos = 3
 
 
     def output(self):
