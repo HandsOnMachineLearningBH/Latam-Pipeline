@@ -18,7 +18,7 @@ def writeExampleOnLineFile(the_file, example):
         the_file.write(str(word) + ', ')
 
 
-class InstanceDataTraining(luigi.Task):
+class DataTraining(luigi.Task):
 
     def requires(self):
         yield DataPreProcessing();
